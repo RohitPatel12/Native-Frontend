@@ -6,7 +6,6 @@ import {
   StyleSheet,
   StatusBar,
   Text,
-  Image,
   Dimensions,
   Animated,
 } from "react-native";
@@ -28,7 +27,7 @@ export default function HomeScreen() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const scrollY = useRef(new Animated.Value(0)).current;
 
-  // Placeholder data
+  // Placeholder product data
   const products = Array.from({ length: 12 }, (_, i) => ({
     _id: `prod-${i}`,
     name: `Product ${i + 1}`,
@@ -47,10 +46,16 @@ export default function HomeScreen() {
       ? products
       : products.filter((p) => p.zodiacTags.includes(selectedCategory));
 
-  // Animation to hide/show categories on scroll
-  const translateY = scrollY.interpolate({
+  // Animate category visibility
+  const categoryOpacity = scrollY.interpolate({
     inputRange: [0, 50],
-    outputRange: [0, -60],
+    outputRange: [1, 0],
+    extrapolate: "clamp",
+  });
+
+  const categoryTranslate = scrollY.interpolate({
+    inputRange: [0, 50],
+    outputRange: [0, -30],
     extrapolate: "clamp",
   });
 
@@ -62,7 +67,6 @@ export default function HomeScreen() {
     />
   );
 
-  // Split first product for featured banner
   const featured = filteredProducts[0];
   const remainingProducts = filteredProducts.slice(1);
 
@@ -79,8 +83,16 @@ export default function HomeScreen() {
         ]}
       />
 
-      {/* Categories scrollable */}
-      <Animated.View style={[styles.categoriesWrapper, { transform: [{ translateY }] }]}>
+      {/* Animated Sticky Categories */}
+      <Animated.View
+        style={[
+          styles.categoriesWrapper,
+          {
+            opacity: categoryOpacity,
+            transform: [{ translateY: categoryTranslate }],
+          },
+        ]}
+      >
         <FlatList
           data={categories}
           horizontal
@@ -93,11 +105,12 @@ export default function HomeScreen() {
       <Animated.FlatList
         data={remainingProducts}
         keyExtractor={(item) => item._id}
-        numColumns={isDesktop ? 4 : 2} // desktop: 4 columns, mobile: 2
+        numColumns={isDesktop ? 4 : 2}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           { useNativeDriver: true }
         )}
+        scrollEventThrottle={16}
         ListHeaderComponent={
           <>
             {/* Featured Banner */}
@@ -132,7 +145,10 @@ const styles = StyleSheet.create({
   categoriesWrapper: {
     paddingVertical: 10,
     backgroundColor: "#000",
-    zIndex: 1,
+    zIndex: 10,
+    position: "absolute",
+    top: 60, // Below header
+    width: "100%",
   },
   offerWrapper: { marginVertical: 10 },
   offerText: { color: "#ff8c00", fontSize: 18, fontWeight: "bold", marginLeft: 10, marginBottom: 6 },

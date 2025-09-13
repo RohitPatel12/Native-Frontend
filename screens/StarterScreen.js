@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { UserContext } from "../context/UserContext";
+import { login } from "../services/authService"; // ✅ import API
 
 const { width } = Dimensions.get("window");
 const isDesktop = width > 800;
@@ -21,7 +22,7 @@ const zodiacSigns = [
   "Aries","Taurus","Gemini","Cancer","Leo","Virgo",
   "Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"
 ];
-
+  
 export default function StarterScreen() {
   const navigation = useNavigation();
   const { setUser, setToken } = useContext(UserContext);
@@ -35,15 +36,24 @@ export default function StarterScreen() {
     if (!email || !password) return Alert.alert("Error", "Enter email & password");
     if (!selectedZodiac) return Alert.alert("Error", "Select zodiac sign");
 
-    setLoading(true);
+    try {
+      setLoading(true);
+      const data = await login(email, password);
 
-    // MOCK login for now, replace with API later
-    setTimeout(() => {
-      setUser({ email, zodiac: selectedZodiac });
-      setToken("mock-jwt-token");
+      // backend should return { token, user }
+      if (!data?.token) throw new Error("Invalid response from server");
+
+      // save in context
+      setUser({ ...data.user, zodiac: selectedZodiac });
+      setToken(data.token);
+
       setLoading(false);
       navigation.replace("Home");
-    }, 1000);
+    } catch (err) {
+      console.error("Login failed:", err);
+      setLoading(false);
+      Alert.alert("Login Failed", err.response?.data?.message || err.message || "Try again");
+    }
   };
 
   return (
@@ -66,6 +76,7 @@ export default function StarterScreen() {
         style={styles.input}
       />
 
+
       <Text style={styles.sectionTitle}>Select your Zodiac</Text>
       <View style={styles.zodiacWrapper}>
         {zodiacSigns.map(sign => (
@@ -76,11 +87,16 @@ export default function StarterScreen() {
           >
             <Text style={[styles.zodiacText, selectedZodiac === sign && styles.selectedZodiacText]}>{sign}</Text>
           </TouchableOpacity>
+        
         ))}
+        
       </View>
 
       <TouchableOpacity style={styles.loginBtn} onPress={handleLogin} disabled={loading}>
         {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.loginText}>Login</Text>}
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+        <Text style={styles.link}>New here? Register</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -98,4 +114,12 @@ const styles = StyleSheet.create({
   selectedZodiacText: { color: "#fff", fontWeight: "bold" },
   loginBtn: { backgroundColor: "#ff8c00", padding: 15, borderRadius: 10, width: isDesktop ? 400 : "100%", alignItems: "center", marginTop: 20 },
   loginText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
+  link: {
+  color: "#ff8c00",   // orange so it’s visible on black bg
+  marginTop: 15,
+  fontSize: 16,
+  fontWeight: "600",
+  textAlign: "center",
+},
+
 });

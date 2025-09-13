@@ -1,19 +1,22 @@
-import axios from 'axios';
-const API_BASE = 'http://localhost:8080/auth/';
+import { API } from "../config/api";
 
 export const signup = async (data) => {
-  const response = await axios.post(`${API_BASE}/register`, data);
-  return response.data;
+  try {
+    const response = await API.post("/register", data);
+    return response.data;
+  } catch (err) {
+    // Extra debug info
+    console.error("🔥 Signup failed:", err.response?.data || err.message);
+    throw err; // rethrow so your component can catch it
+  }
 };
 
 export const login = async (email, password) => {
-  const response = await axios.post(`${API_BASE}/login`, { email, password });
-  return response.data; // returns JWT + user info
-};
-
-export const getUserProfile = async (userId, token) => {
-  const response = await axios.get(`${API_BASE}/users/${userId}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return response.data;
+  try {
+    const response = await API.post("/login", { email, password });
+    return response.data;
+  } catch (err) {
+    console.error("🔥 Login failed:", err.response?.data || err.message);
+    throw err;
+  }
 };
