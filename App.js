@@ -1,20 +1,41 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+// App.js
+import React, { useContext } from "react";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { UserProvider, UserContext } from "./context/UserContext";
+import StarterScreen from "./screens/StarterScreen";
+import HomeScreen from "./screens/HomeScreen";
+import CartScreen from "./screens/CartScreen";
 
-export default function App() {
+import { NavigationContainer } from "@react-navigation/native";
+import { createStackNavigator } from "@react-navigation/stack";
+
+const Stack = createStackNavigator();
+
+function MainNavigator() {
+  const { user } = useContext(UserContext);
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {!user ? (
+        <Stack.Screen name="Starter" component={StarterScreen} />
+      ) : (
+        <>
+          <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen name="Cart" component={CartScreen} />
+        </>
+      )}
+    </Stack.Navigator>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <UserProvider>
+        <NavigationContainer>
+          <MainNavigator />
+        </NavigationContainer>
+      </UserProvider>
+    </SafeAreaProvider>
+  );
+}

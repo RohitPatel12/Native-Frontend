@@ -1,0 +1,45 @@
+import React from "react";
+import { View, FlatList, ScrollView } from "react-native";
+import Header from "../components/Header";
+import CategoryTabs from "../components/CategoryTabs";
+import VideoCard from "../components/VideoCard";
+import ShortsSection from "../components/ShortsSection";
+
+const dummyVideos = [
+  {
+    id: "1",
+    title: "The sun shines in my room",
+    channel: "Furlenco",
+    views: "1.2M views",
+    time: "2 days ago",
+    thumbnail: "https://via.placeholder.com/400x200",
+  },
+  {
+    id: "2",
+    title: "React Native Tutorial",
+    channel: "CodeWithMe",
+    views: "500K views",
+    time: "1 week ago",
+    thumbnail: "https://via.placeholder.com/400x200",
+  },
+];
+
+export default function HomeScreen() {
+  return (
+    <View style={{ flex: 1, backgroundColor: "#000" }}>
+      <Header />
+      <CategoryTabs />
+
+      <ScrollView>
+        <FlatList
+          data={dummyVideos}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => <VideoCard video={item} />}
+          scrollEnabled={false}
+        />
+
+        <ShortsSection />
+      </ScrollView>
+    </View>
+  );
+}
