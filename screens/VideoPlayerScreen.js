@@ -9,8 +9,8 @@ export default function VideoPlayerScreen({ route }) {
   // Determine correct backend URL for emulator/simulator
   const baseURL =
     Platform.OS === 'android'
-      ? 'http://10.0.2.2:8080' // Android emulator
-      : 'http://192.168.1.3:8080'; // Replace with your machine IP for iOS simulator / physical device
+      ? 'http://10.0.2.2:8081' // Android emulator
+      : 'http://192.168.1.3:8081'; // Replace with your machine IP for iOS simulator / physical device
 
   const videoURL = video.url.startsWith('http') ? video.url : `${baseURL}${video.url}`;
 

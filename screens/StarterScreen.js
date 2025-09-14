@@ -39,7 +39,7 @@ export default function StarterScreen() {
     try {
       setLoading(true);
       const data = await login(email, password);
-
+      
       // backend should return { token, user }
       if (!data?.token) throw new Error("Invalid response from server");
 

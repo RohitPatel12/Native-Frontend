@@ -1,13 +1,44 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import axios from "axios";
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    // TODO: Call your login API
-    console.log("Login pressed:", email, password);
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert("Validation", "Email and password are required");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await axios.post("http://localhost:8081/login", {
+        email,
+        password,
+      });
+
+      // Check if backend returned a token
+      if (response.data?.token) {
+        console.log("Login successful:", response.data);
+        Alert.alert("Success", response.data.message || "Login successful");
+        // You can store token in context or AsyncStorage here
+        navigation.navigate("Home"); // or whatever your home screen is
+      } else {
+        Alert.alert("Login failed", "Invalid response from server");
+      }
+    } catch (error) {
+      console.error("Login error:", error.response || error);
+      Alert.alert(
+        "Login failed",
+        error.response?.data?.message || "Something went wrong"
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -31,11 +62,10 @@ const LoginScreen = ({ navigation }) => {
         secureTextEntry
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
+      <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
+        <Text style={styles.buttonText}>{loading ? "Logging in..." : "Login"}</Text>
       </TouchableOpacity>
 
-      {/* 🔹 Register button here */}
       <TouchableOpacity onPress={() => navigation.navigate("Register")}>
         <Text style={styles.link}>New here? Register</Text>
       </TouchableOpacity>

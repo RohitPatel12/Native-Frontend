@@ -5,9 +5,10 @@ node_modules/
 
 # Expo
 .env
+app.config.js
 .expo/
 dist/
-web-build/
+web-build/  23  
 expo-env.d.ts
 
 # Native

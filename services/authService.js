@@ -1,22 +1,36 @@
-import { API } from "../config/api";
+import axios from "axios";
 
-export const signup = async (data) => {
+const API_BASE_URL = "http://localhost:8081"; // Gateway URL
+
+// ✅ Signup / Register
+export const signup = async (userData) => {
   try {
-    const response = await API.post("/register", data);
-    return response.data;
-  } catch (err) {
-    // Extra debug info
-    console.error("🔥 Signup failed:", err.response?.data || err.message);
-    throw err; // rethrow so your component can catch it
+    const response = await axios.post(`${API_BASE_URL}/register`, userData);
+    return response.data; // contains { message: "✅ Registration successful" }
+  } catch (error) {
+    console.error("Signup error:", error.response || error);
+    throw error.response?.data || { message: "Signup failed" };
   }
 };
 
-export const login = async (email, password) => {
+// ✅ Login
+export const login = async (credentials) => {
   try {
-    const response = await API.post("/login", { email, password });
+    const response = await axios.post(`${API_BASE_URL}/login`, credentials);
+    return response.data; // contains { message, token, refreshToken }
+  } catch (error) {
+    console.error("Login error:", error.response || error);
+    throw error.response?.data || { message: "Login failed" };
+  }
+};
+
+// ✅ Refresh token
+export const refreshToken = async (token) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/refresh`, { refreshToken: token });
     return response.data;
-  } catch (err) {
-    console.error("🔥 Login failed:", err.response?.data || err.message);
-    throw err;
+  } catch (error) {
+    console.error("Refresh token error:", error.response || error);
+    throw error.response?.data || { message: "Token refresh failed" };
   }
 };

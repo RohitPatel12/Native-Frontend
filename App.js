@@ -5,7 +5,7 @@ import { UserProvider, UserContext } from "./context/UserContext";
 import StarterScreen from "./screens/StarterScreen";
 import HomeScreen from "./screens/HomeScreen";
 import CartScreen from "./screens/CartScreen";
-// import LoginScreen from "./screens/LoginScreen";
+import LoginScreen from "./screens/LoginScreen";
 import RegisterScreen from "./screens/RegisterScreen";
 import ProfileSetupScreen from "./screens/ProfileSetupScreen"; // ✅ make sure this exists
 
@@ -22,13 +22,14 @@ function MainNavigator() {
       {!user ? (
         <>
           <Stack.Screen name="Starter" component={StarterScreen} />
-          {/* <Stack.Screen name="Login" component={LoginScreen} /> */}
+          <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Register" component={RegisterScreen} /> 
+          <Stack.Screen name="Home" component={HomeScreen} />
         </>
       ) : (
         <>
+          
           <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
-          <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="Cart" component={CartScreen} />
         </>
       )}

@@ -1,4 +1,5 @@
-import React, { useState, useContext } from "react";
+// screens/RegisterScreen.js
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -9,11 +10,8 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { signup } from "../services/authService";
-import { UserContext } from "../context/UserContext";
 
 const RegisterScreen = ({ navigation }) => {
-  const { setUser, setToken } = useContext(UserContext);
-
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -22,106 +20,79 @@ const RegisterScreen = ({ navigation }) => {
   });
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (key, value) => setForm({ ...form, [key]: value });
+  const handleChange = (field, value) => {
+    setForm({ ...form, [field]: value });
+  };
 
   const handleRegister = async () => {
     console.log("➡️ handleRegister called with form:", form);
 
     if (!form.name || !form.email || !form.password || !form.confirmPassword) {
-      Alert.alert("Error", "All fields are required");
+      Alert.alert("⚠️ Missing Fields", "Please fill in all fields");
       return;
     }
 
     if (form.password !== form.confirmPassword) {
-      Alert.alert("Error", "Passwords do not match");
+      Alert.alert("⚠️ Password Mismatch", "Passwords do not match");
       return;
     }
 
+    setLoading(true);
     try {
-      setLoading(true);
-
       console.log("➡️ Calling signup API...");
-      const data = await signup({
-        name: form.name,
-        email: form.email,
-        password: form.password,
-      });
+      const res = await signup(form);
 
-      console.log("✅ Signup API returned:", data);
+      console.log("✅ Signup success:", res);
+      Alert.alert("🎉 Success", res.message || "Registration successful");
 
-      if (!data?.token) {
-        throw new Error("Invalid response from server");
-      }
-
-      // Save user & token in context
-      setUser(data.user);
-      setToken(data.token);
-
-      setLoading(false);
-
-      // Navigate to ProfileSetup
-      navigation.replace("ProfileSetup");
+      navigation.navigate("Login");
     } catch (err) {
+      console.error("❌ Registration failed:", err.message);
+      Alert.alert("❌ Registration Failed", err.message);
+    } finally {
       setLoading(false);
-
-      console.error("❌ Registration failed:", err);
-
-      const message =
-        err.response?.data?.message ||
-        err.message ||
-        "Something went wrong. Check your connection or API.";
-
-      Alert.alert("Registration Failed", message);
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Create Account</Text>
+      <Text style={styles.heading}>Register</Text>
 
       <TextInput
         style={styles.input}
-        placeholder="Full Name"
+        placeholder="Name"
         value={form.name}
-        onChangeText={(text) => handleChange("name", text)}
+        onChangeText={(v) => handleChange("name", v)}
       />
-
       <TextInput
         style={styles.input}
         placeholder="Email"
-        value={form.email}
-        onChangeText={(text) => handleChange("email", text)}
         keyboardType="email-address"
-        autoCapitalize="none"
+        value={form.email}
+        onChangeText={(v) => handleChange("email", v)}
       />
-
       <TextInput
         style={styles.input}
         placeholder="Password"
-        value={form.password}
-        onChangeText={(text) => handleChange("password", text)}
         secureTextEntry
+        value={form.password}
+        onChangeText={(v) => handleChange("password", v)}
       />
-
       <TextInput
         style={styles.input}
         placeholder="Confirm Password"
-        value={form.confirmPassword}
-        onChangeText={(text) => handleChange("confirmPassword", text)}
         secureTextEntry
+        value={form.confirmPassword}
+        onChangeText={(v) => handleChange("confirmPassword", v)}
       />
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handleRegister}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
+      {loading ? (
+        <ActivityIndicator size="large" color="#000" />
+      ) : (
+        <TouchableOpacity style={styles.button} onPress={handleRegister}>
           <Text style={styles.buttonText}>Register</Text>
-        )}
-      </TouchableOpacity>
+        </TouchableOpacity>
+      )}
 
       <TouchableOpacity onPress={() => navigation.navigate("Login")}>
         <Text style={styles.link}>Already have an account? Login</Text>
@@ -133,10 +104,37 @@ const RegisterScreen = ({ navigation }) => {
 export default RegisterScreen;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", justifyContent: "center", padding: 20 },
-  title: { fontSize: 28, fontWeight: "bold", textAlign: "center", marginBottom: 30 },
-  input: { borderWidth: 1, borderColor: "#ccc", padding: 12, borderRadius: 8, marginBottom: 15, fontSize: 16 },
-  button: { backgroundColor: "#007AFF", padding: 15, borderRadius: 8, alignItems: "center", marginVertical: 10 },
-  buttonText: { color: "#fff", fontSize: 18, fontWeight: "600" },
-  link: { textAlign: "center", color: "#007AFF", marginTop: 10 },
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 20,
+  },
+  heading: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 15,
+  },
+  button: {
+    backgroundColor: "#000",
+    padding: 15,
+    borderRadius: 8,
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  link: {
+    color: "blue",
+    textAlign: "center",
+  },
 });
