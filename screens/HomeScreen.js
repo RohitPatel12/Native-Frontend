@@ -1,5 +1,4 @@
-// src/screens/HomeScreen.js
-import React, { useState, useContext, useRef } from "react";
+import React, { useState, useContext, useRef , useMemo } from "react";
 import {
   View,
   FlatList,
@@ -8,14 +7,17 @@ import {
   Text,
   Dimensions,
   Animated,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
 import { UserContext } from "../context/UserContext";
-
 import Header from "../components/Header";
 import CategoryChip from "../components/CategoryChip";
 import ProductCard from "../cards/ProductCard";
 import FeaturedProduct from "../components/FeaturedProduct";
+import SearchBar from "../components/SearchBar";
+import { useProductSearch } from "../hooks/useProductSearch";
 
 const { width } = Dimensions.get("window");
 const isDesktop = width > 800;
@@ -23,30 +25,29 @@ const isDesktop = width > 800;
 export default function HomeScreen() {
   const { addToCart } = useContext(UserContext);
   const insets = useSafeAreaInsets();
-
+  const navigation = useNavigation();
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [showSearch, setShowSearch] = useState(false);
+  const [query, setQuery] = useState("");
   const scrollY = useRef(new Animated.Value(0)).current;
 
-  // Placeholder product data
-  const products = Array.from({ length: 12 }, (_, i) => ({
-    _id: `prod-${i}`,
-    name: `Product ${i + 1}`,
-    price: (i + 1) * 100,
-    zodiacTags: ["Aries", "Leo", "Sagittarius"],
-    imageUrl: "https://via.placeholder.com/150",
-  }));
+  // Fetch products from hook
+  const { products, loading } = useProductSearch(query);
 
   const categories = [
     "All","Aries","Taurus","Gemini","Cancer","Leo","Virgo",
     "Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"
   ];
 
-  const filteredProducts =
-    selectedCategory === "All"
-      ? products
-      : products.filter((p) => p.zodiacTags.includes(selectedCategory));
+  // Filter products by category
+ const filteredProducts = useMemo(() => {
+  return selectedCategory === "All"
+    ? products
+    : products.filter((p) => p.category?.includes(selectedCategory));
+}, [products, selectedCategory]);
+  const featured = filteredProducts[0];
+  const remainingProducts = filteredProducts.slice(1);
 
-  // Animate category visibility
   const categoryOpacity = scrollY.interpolate({
     inputRange: [0, 50],
     outputRange: [1, 0],
@@ -59,16 +60,10 @@ export default function HomeScreen() {
     extrapolate: "clamp",
   });
 
-  const renderCategory = ({ item }) => (
-    <CategoryChip
-      label={item}
-      selected={item === selectedCategory}
-      onPress={() => setSelectedCategory(item)}
-    />
-  );
-
-  const featured = filteredProducts[0];
-  const remainingProducts = filteredProducts.slice(1);
+  const handleSelectSuggestion = (product) => {
+    navigation.navigate("ProductScreen", { productId: product._id || product.id });
+    setShowSearch(false);
+  };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
@@ -77,79 +72,105 @@ export default function HomeScreen() {
       <Header
         title="AstroLux"
         rightIcons={[
-          { name: "search-outline", onPress: () => {} },
+          { name: "search-outline", onPress: () => setShowSearch((s) => !s) },
           { name: "person-outline", onPress: () => {} },
           { name: "cart-outline", onPress: () => {} },
         ]}
       />
 
-      {/* Animated Sticky Categories */}
+      {/* 🔎 Search Overlay */}
+      {showSearch && (
+        <View style={styles.searchOverlay}>
+          <SearchBar
+            query={query}
+            setQuery={setQuery}
+            suggestions={products}
+            onSelectSuggestion={handleSelectSuggestion}
+          />
+        </View>
+      )}
+
+      {/* Categories */}
       <Animated.View
         style={[
           styles.categoriesWrapper,
-          {
-            opacity: categoryOpacity,
-            transform: [{ translateY: categoryTranslate }],
-          },
+          { opacity: categoryOpacity, transform: [{ translateY: categoryTranslate }] },
         ]}
       >
         <FlatList
           data={categories}
           horizontal
-          keyExtractor={(item) => item}
-          renderItem={renderCategory}
+          keyExtractor={(item, index) => `${item}-${index}`}
+          renderItem={({ item }) => (
+            <CategoryChip
+              label={item}
+              selected={item === selectedCategory}
+              onPress={() => setSelectedCategory(item)}
+            />
+          )}
           showsHorizontalScrollIndicator={false}
         />
       </Animated.View>
 
-      <Animated.FlatList
-        data={remainingProducts}
-        keyExtractor={(item) => item._id}
-        numColumns={isDesktop ? 4 : 2}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: true }
-        )}
-        scrollEventThrottle={16}
-        ListHeaderComponent={
-          <>
-            {/* Featured Banner */}
-            {featured && <FeaturedProduct product={featured} />}
-
-            {/* Offer Tab */}
-            <View style={styles.offerWrapper}>
-              <Text style={styles.offerText}>🔥 Today's Offers 🔥</Text>
-              <FlatList
-                data={remainingProducts.slice(0, 4)}
-                horizontal
-                keyExtractor={(item) => item._id}
-                renderItem={({ item }) => (
-                  <ProductCard product={item} onAddToCart={addToCart} />
-                )}
-                showsHorizontalScrollIndicator={false}
-              />
-            </View>
-          </>
-        }
-        renderItem={({ item }) => (
-          <ProductCard product={item} onAddToCart={addToCart} />
-        )}
-        contentContainerStyle={{ paddingBottom: insets.bottom + 60, paddingTop: 10 }}
-      />
+      {/* Loading & fallback */}
+      {loading ? (
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color="blue" />
+          <Text style={{ color: "#fff", marginTop: 8 }}>Loading products...</Text>
+        </View>
+      ) : filteredProducts.length === 0 ? (
+        <View style={styles.center}>
+          <Text style={{ color: "#aaa", fontSize: 18 }}>No products available</Text>
+        </View>
+      ) : (
+        <Animated.FlatList
+          data={remainingProducts}
+          keyExtractor={(item, index) => (item._id || item.id || `product-${index}`).toString()}
+          numColumns={isDesktop ? 4 : 2}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: true }
+          )}
+          scrollEventThrottle={16}
+          ListHeaderComponent={
+            <>
+              {featured && (
+                <FeaturedProduct
+                  key={`featured-${featured._id || featured.id}`}
+                  product={featured}
+                />
+              )}
+            </>
+          }
+          renderItem={({ item }) => <ProductCard product={item} onAddToCart={addToCart} />}
+          contentContainerStyle={{
+            paddingBottom: insets.bottom + 60,
+            paddingTop: 10,
+          }}
+        />
+      )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#000" },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
   categoriesWrapper: {
     paddingVertical: 10,
     backgroundColor: "#000",
     zIndex: 10,
     position: "absolute",
-    top: 60, // Below header
+    top: 60,
     width: "100%",
   },
-  offerWrapper: { marginVertical: 10 },
-  offerText: { color: "#ff8c00", fontSize: 18, fontWeight: "bold", marginLeft: 10, marginBottom: 6 },
+  searchOverlay: {
+    position: "absolute",
+    top: 60,
+    left: 0,
+    right: 0,
+    backgroundColor: "#111",
+    padding: 10,
+    zIndex: 20,
+  },
 });

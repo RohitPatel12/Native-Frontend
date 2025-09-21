@@ -1,9 +1,12 @@
-import axios from 'axios';
-const API_BASE = 'https://your-api-gateway.com/products';
+import API from "../config/api";
 
-export const getProductsByZodiac = async (zodiac, token) => {
-  const response = await axios.get(`${API_BASE}?zodiac=${zodiac}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return response.data;
+export const ProductService = {
+  getAll: async () => {
+    const res = await API.get("/products");
+    return res.data;
+  },
+  getById: async (id) => {
+    const res = await API.get(`/products/${id}`);
+    return res.data;
+  },
 };

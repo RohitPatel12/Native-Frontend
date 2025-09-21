@@ -1,44 +1,80 @@
 // src/cards/ProductCard.js
 import React, { useContext } from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import { UserContext } from "../context/UserContext";
 
 export default function ProductCard({ product }) {
+  const navigation = useNavigation();
   const { addToCart } = useContext(UserContext);
 
-  return (
-    <View style={styles.card}>
-      <Image source={{ uri: product.imageUrl }} style={styles.image} />
-      <Text style={styles.name}>{product.name}</Text>
-      <Text style={styles.price}>₹{product.price}</Text>
+  const imageSource = product.imageUrl
+    ? { uri: product.imageUrl }
+    : require("../assets/placeholder.jpg");
 
+  return (
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => navigation.navigate("ProductScreen", { product })}
+    >
+      {/* Product Image */}
+      <Image source={imageSource} style={styles.image} resizeMode="cover" />
+
+      {/* Info */}
+      <View style={styles.infoWrapper}>
+        <Text style={styles.name} numberOfLines={1}>
+          {product.name}
+        </Text>
+        <Text style={styles.price}>₹{product.price}</Text>
+      </View>
+
+      {/* Add to Cart button */}
       <TouchableOpacity
-        style={styles.button}
+        style={styles.cartButton}
         onPress={() => addToCart(product)}
       >
-        <Text style={styles.buttonText}>Add to Cart</Text>
+        <Text style={styles.cartButtonText}>+ Cart</Text>
       </TouchableOpacity>
-    </View>
+    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    margin: 8,
-    padding: 10,
+    flex: 1,
     backgroundColor: "#111",
-    borderRadius: 10,
-    alignItems: "center",
+    margin: 8,
+    borderRadius: 12,
+    overflow: "hidden",
+    elevation: 3, // for Android shadow
   },
-  image: { width: "100%", height: 180, borderRadius: 8 },
-  name: { color: "#fff", fontSize: 16, marginTop: 6 },
-  price: { color: "gray", fontSize: 14, marginVertical: 4 },
-  button: {
-    backgroundColor: "#6a0dad",
-    padding: 10,
-    borderRadius: 6,
-    marginTop: 6,
+  image: {
     width: "100%",
+    height: 120,
   },
-  buttonText: { color: "#fff", textAlign: "center", fontWeight: "bold" },
+  infoWrapper: {
+    padding: 8,
+  },
+  name: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#fff",
+  },
+  price: {
+    fontSize: 13,
+    color: "limegreen",
+    marginTop: 4,
+  },
+  cartButton: {
+    backgroundColor: "#ff8c00",
+    paddingVertical: 6,
+    alignItems: "center",
+    margin: 8,
+    borderRadius: 8,
+  },
+  cartButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 13,
+  },
 });

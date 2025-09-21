@@ -2,7 +2,7 @@
 import React, { useContext } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { UserProvider, UserContext } from "./context/UserContext";
-import StarterScreen from "./screens/StarterScreen";
+// import StarterScreen from "./screens/StarterScreen";
 import HomeScreen from "./screens/HomeScreen";
 import CartScreen from "./screens/CartScreen";
 import LoginScreen from "./screens/LoginScreen";
@@ -11,6 +11,7 @@ import ProfileSetupScreen from "./screens/ProfileSetupScreen"; // ✅ make sure 
 
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
+import ProductScreen from "./screens/ProductScreen";
 
 const Stack = createStackNavigator();
 
@@ -21,10 +22,11 @@ function MainNavigator() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {!user ? (
         <>
-          <Stack.Screen name="Starter" component={StarterScreen} />
-          <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="Register" component={RegisterScreen} /> 
+          {/* <Stack.Screen name="Starter" component={StarterScreen} /> */}
+          {/* <Stack.Screen name="Login" component={LoginScreen} /> */}
+          {/* <Stack.Screen name="Register" component={RegisterScreen} />  */}
           <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen name="ProductScreen" component={ProductScreen} />
         </>
       ) : (
         <>

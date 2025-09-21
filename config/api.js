@@ -7,7 +7,7 @@ import Constants from "expo-constants";
 const { API_URL_ANDROID, API_URL_IOS, API_URL_WEB } =
   Constants.expoConfig.extra;
 
-const baseURL =
+const baseURL = 
   Platform.OS === "android"
     ? API_URL_ANDROID
     : Platform.OS === "ios"
